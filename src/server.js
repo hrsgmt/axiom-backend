@@ -1,6 +1,6 @@
 import Fastify from "fastify";
 import authRoutes from "./routes/auth/auth.routes.js";
-import protectedRoutes from "./routes/protected/protected.routes.js";
+import protectedRoutes from "./routes/protected.routes.js";
 
 const app = Fastify({ logger: true });
 const PORT = process.env.PORT || 4000;
