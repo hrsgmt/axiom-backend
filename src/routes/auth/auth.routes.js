@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "axiom-secret";
+const JWT_SECRET = process.env.JWT_SECRET || "axiom-secret-key";
 
 export default async function authRoutes(app) {
 
@@ -18,6 +18,7 @@ export default async function authRoutes(app) {
       return reply.code(400).send({ error: "Email and password required" });
     }
 
+    // demo auth (later DB)
     const token = jwt.sign(
       { email },
       JWT_SECRET,
