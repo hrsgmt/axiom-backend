@@ -5,44 +5,24 @@ const users = [];
 
 export default async function authRoutes(app) {
 
-  app.post("/register", async (request, reply) => {
-    const { email, password } = request.body;
-
-    if (!email || !password) {
-      return reply.code(400).send({ error: "Email and password required" });
-    }
-
+  app.post("/register", async (req) => {
+    const { email, password } = req.body;
     const passwordHash = await bcrypt.hash(password, 10);
 
-    const user = {
-      id: crypto.randomUUID(),
-      email,
-      passwordHash
-    };
-
-    users.push(user);
-
-    return { registered: true, userId: user.id };
+    users.push({ id: crypto.randomUUID(), email, passwordHash });
+    return { registered: true };
   });
 
-  app.post("/login", async (request, reply) => {
-    const { email, password } = request.body;
+  app.post("/login", async (req, reply) => {
+    const { email, password } = req.body;
 
     const user = users.find(u => u.email === email);
-    if (!user) {
-      return reply.code(401).send({ error: "Invalid credentials" });
-    }
+    if (!user) return reply.code(401).send({ error: "Invalid credentials" });
 
-    const valid = await bcrypt.compare(password, user.passwordHash);
-    if (!valid) {
-      return reply.code(401).send({ error: "Invalid credentials" });
-    }
+    const ok = await bcrypt.compare(password, user.passwordHash);
+    if (!ok) return reply.code(401).send({ error: "Invalid credentials" });
 
-    const token = signToken({
-      userId: user.id,
-      email: user.email
-    });
-
+    const token = signToken({ userId: user.id, email: user.email });
     return { login: true, token };
   });
 }

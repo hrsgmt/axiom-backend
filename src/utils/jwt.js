@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "axiom_dev_secret";
+const JWT_SECRET = process.env.JWT_SECRET || "axiom_super_secret_key";
 
 export function signToken(payload) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
