@@ -1,47 +1,60 @@
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { createUser, getUserByEmail } from "../../stores/users.store.js";
-
-const JWT_SECRET = process.env.JWT_SECRET || "axiom-secret";
+import { randomUUID } from "crypto";
+import { signToken } from "../../utils/jwt.js";
 
 export default async function authRoutes(app) {
 
   app.post("/register", async (request, reply) => {
     const { email, password } = request.body || {};
+
     if (!email || !password) {
       return reply.code(400).send({ error: "Email and password required" });
     }
 
-    const existing = getUserByEmail(email);
-    if (existing) {
-      return reply.code(409).send({ error: "User already exists" });
+    const exists = app.users.find(u => u.email === email);
+    if (exists) {
+      return reply.code(400).send({ error: "User already exists" });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const user = createUser({ email, passwordHash });
 
-    return { registered: true, userId: user.id };
+    const user = {
+      id: randomUUID(),
+      email,
+      passwordHash,
+      createdAt: Date.now()
+    };
+
+    app.users.push(user);
+
+    return {
+      registered: true,
+      userId: user.id
+    };
   });
 
   app.post("/login", async (request, reply) => {
     const { email, password } = request.body || {};
-    const user = getUserByEmail(email);
 
+    const user = app.users.find(u => u.email === email);
     if (!user) {
       return reply.code(401).send({ error: "Invalid credentials" });
     }
 
-    const ok = await bcrypt.compare(password, user.passwordHash);
-    if (!ok) {
+    const valid = await bcrypt.compare(password, user.passwordHash);
+    if (!valid) {
       return reply.code(401).send({ error: "Invalid credentials" });
     }
 
-    const token = jwt.sign(
-      { userId: user.id, email: user.email },
-      JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    const token = signToken({
+      userId: user.id,
+      email: user.email
+    });
 
-    return { login: true, token };
+    return {
+      login: true,
+      token
+    };
   });
+
 }
