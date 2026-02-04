@@ -1,13 +1,13 @@
 import Fastify from "fastify";
 import authRoutes from "./routes/auth/auth.routes.js";
+import protectedRoutes from "./routes/protected/protected.routes.js";
 
 const app = Fastify({ logger: true });
 const PORT = process.env.PORT || 4000;
 
-// register auth routes
 app.register(authRoutes, { prefix: "/api/auth" });
+app.register(protectedRoutes, { prefix: "/api" });
 
-// health check
 app.get("/health", async () => {
   return { status: "ok" };
 });
