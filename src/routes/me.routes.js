@@ -1,8 +1,9 @@
+import verifyJWT from "../middlewares/verifyJWT.js";
+
 export default async function meRoutes(app) {
-  app.get("/me", { preHandler: app.verifyJWT }, async (request) => {
-    const { passwordHash, ...safeUser } = request.user;
+  app.get("/me", { preHandler: verifyJWT }, async (request) => {
     return {
-      user: safeUser,
+      user: request.user,
       message: "Protected route working ✅"
     };
   });
