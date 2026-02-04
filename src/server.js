@@ -12,7 +12,7 @@ app.get("/health", async () => {
   return { status: "ok" };
 });
 
-// REGISTER AUTH ROUTES
+// AUTH ROUTES
 app.register(authRoutes, { prefix: "/api/auth" });
 
 app.listen({ port: PORT, host: "0.0.0.0" }, () => {
