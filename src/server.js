@@ -11,12 +11,3 @@ app.register(meRoutes, { prefix: "/api" });
 app.get("/health", async () => ({ status: "ok" }));
 
 app.listen({ port: PORT, host: "0.0.0.0" });
-
-import verifyJWT from "./middlewares/verifyJWT.js";
-
-app.get("/api/me", { preHandler: verifyJWT }, async (request) => {
-  return {
-    user: request.user,
-    message: "Protected route working ✅"
-  };
-});

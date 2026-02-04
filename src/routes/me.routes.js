@@ -4,7 +4,7 @@ export default async function meRoutes(app) {
   app.get("/me", { preHandler: verifyJWT }, async (request) => {
     return {
       user: request.user,
-      message: "Protected route working ✅"
+      message: "JWT VERIFIED SUCCESSFULLY ✅"
     };
   });
 }
