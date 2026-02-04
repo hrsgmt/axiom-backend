@@ -10,4 +10,6 @@ app.register(meRoutes, { prefix: "/api" });
 
 app.get("/health", async () => ({ status: "ok" }));
 
-app.listen({ port: PORT, host: "0.0.0.0" });
+app.listen({ port: PORT, host: "0.0.0.0" }, () => {
+  console.log("Server running on port " + PORT);
+});
