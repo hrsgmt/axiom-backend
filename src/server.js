@@ -1,23 +1,23 @@
 import Fastify from "fastify";
+import authRoutes from "./routes/auth.routes.js";
 
 const app = Fastify({ logger: true });
 const PORT = process.env.PORT || 4000;
 
-/* Root */
+// Root
 app.get("/", async () => {
   return "Axiom backend running 🚀";
 });
 
-/* Health check */
+// Health
 app.get("/health", async () => {
-  return { status: "ok", uptime: process.uptime() };
+  return { status: "ok" };
 });
 
-/* Keep-alive ping */
-app.get("/ping", async () => {
-  return { pong: true, time: Date.now() };
-});
+// Register auth routes
+await app.register(authRoutes);
 
+// Start server
 app.listen({ port: PORT, host: "0.0.0.0" }, () => {
   console.log("Server running on port " + PORT);
 });
