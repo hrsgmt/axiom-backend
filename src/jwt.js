@@ -1,11 +1,11 @@
 import jwt from "jsonwebtoken";
 
-const SECRET = process.env.JWT_SECRET || "AXIOM_JWT_SINGLE_SECRET";
+export const JWT_SECRET = "AXIOM_JWT_SINGLE_SECRET";
 
 export function signToken(payload) {
-  return jwt.sign(payload, SECRET, { expiresIn: "7d" });
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
 }
 
 export function verifyToken(token) {
-  return jwt.verify(token, SECRET);
+  return jwt.verify(token, JWT_SECRET);
 }
