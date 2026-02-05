@@ -1,38 +1,63 @@
-import meRoute from "./routes/me.js";
-import meRoute from "./routes/me.js";
 import Fastify from "fastify";
-import cors from "@fastify/cors";
-
-import authRoutes from "./routes/auth/auth.routes.js";
-import loginRoute from "./routes/auth/login.js";
-import { verifyToken } from "./jwt.js";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 
 const app = Fastify({ logger: true });
 
-/* ---------- CORS ---------- */
-await app.register(cors, {
-  origin: "*",
-  methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+const JWT_SECRET = "AXIOM_JWT_SINGLE_SECRET";
+
+// In-memory users
+const users = new Map();
+
+/* ---------------- AUTH REGISTER ---------------- */
+app.post("/api/auth/register", async (req, reply) => {
+  const { email, password } = req.body || {};
+  if (!email || !password) {
+    return reply.code(400).send({ error: "Email and password required" });
+  }
+
+  if (users.has(email)) {
+    return reply.code(400).send({ error: "User already exists" });
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+  const user = { id: crypto.randomUUID(), email, passwordHash };
+  users.set(email, user);
+
+  return { registered: true, email };
 });
 
-/* ---------- AUTH ROUTES ---------- */
-await app.register(authRoutes, { prefix: "/api/auth" });
-await app.register(loginRoute, { prefix: "/api/auth" });
+/* ---------------- AUTH LOGIN ---------------- */
+app.post("/api/auth/login", async (req, reply) => {
+  const { email, password } = req.body || {};
+  const user = users.get(email);
 
-/* ---------- PROTECTED ROUTE ---------- */
+  if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+    return reply.code(401).send({ error: "Invalid credentials" });
+  }
+
+  const token = jwt.sign(
+    { id: user.id, email: user.email },
+    JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+
+  return { login: true, token };
+});
+
+/* ---------------- ME (JWT VERIFY) ---------------- */
 app.get("/api/me", async (req, reply) => {
   try {
     const auth = req.headers.authorization;
     if (!auth) {
-      return reply.code(401).send({ error: "No token" });
+      return reply.code(401).send({ error: "Missing token" });
     }
 
     const token = auth.replace("Bearer ", "");
-    const decoded = verifyToken(token);
+    const decoded = jwt.verify(token, JWT_SECRET);
 
     return {
-      user: decoded,
+      decoded,
       message: "JWT VERIFIED ✅"
     };
   } catch (e) {
@@ -43,13 +68,7 @@ app.get("/api/me", async (req, reply) => {
   }
 });
 
-/* ---------- HEALTH ---------- */
+/* ---------------- HEALTH ---------------- */
 app.get("/", () => "Axiom backend running 🚀");
 
-/* ---------- START SERVER ---------- */
-app.register(meRoute);
-app.register(meRoute);
-app.listen({
-  port: process.env.PORT || 4000,
-  host: "0.0.0.0"
-});
+app.listen({ port: process.env.PORT || 4000, host: "0.0.0.0" });
