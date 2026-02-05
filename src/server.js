@@ -1,19 +1,22 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 
-// ROUTES
-import authRoutes from "./modules/auth/auth.routes.js";
+// ✅ AUTH ROUTES (ONLY ONE SOURCE)
+import authRoutes from "./routes/auth/auth.routes.js";
 
 const app = Fastify({ logger: true });
 
 // CORS
 await app.register(cors, {
   origin: "*",
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 });
 
-// AUTH ROUTES → /api/auth/*
+// ✅ REGISTER AUTH ROUTES
+// This creates:
+// POST /api/auth/register
+// POST /api/auth/login
 await app.register(authRoutes, { prefix: "/api/auth" });
 
 // HEALTH
