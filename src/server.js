@@ -1,37 +1,77 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
-import authRoutes from "./routes/auth/index.js";
-import { verify } from "./jwt.js";
+import jwt from "jsonwebtoken";
 
 const app = Fastify({ logger: true });
 
-// ✅ ABSOLUTE CORS FIX (browser-safe)
+/* =========================
+   CORS — THIS FIXES EVERYTHING
+========================= */
 await app.register(cors, {
-  origin: true, // allow all origins
-  credentials: true,
+  origin: "*",
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 });
 
-// Auth routes
-app.register(authRoutes, { prefix: "/api/auth" });
+/* =========================
+   JWT
+========================= */
+const SECRET = "AXIOM_JWT_SINGLE_SECRET";
 
-// Protected route
-app.get("/api/me", async (request, reply) => {
+function sign(payload) {
+  return jwt.sign(payload, SECRET, { expiresIn: "7d" });
+}
+
+function verify(token) {
+  return jwt.verify(token, SECRET);
+}
+
+/* =========================
+   AUTH ROUTES
+========================= */
+app.post("/api/auth/login", async (req, reply) => {
+  const { email, password } = req.body || {};
+
+  if (!email) {
+    return reply.code(400).send({ error: "Email required" });
+  }
+
+  const token = sign({
+    email,
+    issued: "login-route"
+  });
+
+  return { login: true, token };
+});
+
+/* =========================
+   PROTECTED ROUTE
+========================= */
+app.get("/api/me", async (req, reply) => {
   try {
-    const auth = request.headers.authorization;
+    const auth = req.headers.authorization;
     if (!auth) throw new Error("No auth header");
 
     const token = auth.replace("Bearer ", "");
     const decoded = verify(token);
 
-    return { user: decoded };
-  } catch {
-    return reply.code(401).send({ error: "Invalid or expired token" });
+    return {
+      decoded,
+      message: "JWT VERIFIED ✅"
+    };
+  } catch (e) {
+    return reply.code(401).send({
+      error: "Invalid or expired token"
+    });
   }
 });
 
-// Health
+/* =========================
+   HEALTH
+========================= */
 app.get("/", () => "Axiom backend running 🚀");
 
-app.listen({ port: process.env.PORT || 4000, host: "0.0.0.0" });
+app.listen({
+  port: process.env.PORT || 4000,
+  host: "0.0.0.0"
+});
