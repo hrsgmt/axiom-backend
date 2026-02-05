@@ -1,3 +1,4 @@
+import meRoute from "./routes/me.js";
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 
@@ -45,6 +46,7 @@ app.get("/api/me", async (req, reply) => {
 app.get("/", () => "Axiom backend running 🚀");
 
 /* ---------- START SERVER ---------- */
+app.register(meRoute);
 app.listen({
   port: process.env.PORT || 4000,
   host: "0.0.0.0"
