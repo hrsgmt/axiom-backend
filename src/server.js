@@ -13,6 +13,8 @@ app.register(cors, {
 
 // AUTH ROUTES
 app.register(authRoutes, { prefix: "/api/auth" });
+import meRoutes from "./routes/me/me.routes.js";
+app.register(meRoutes, { prefix: "/api" });
 
 // DEBUG: list routes
 app.ready(() => {
