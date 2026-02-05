@@ -17,3 +17,12 @@ app.get("/health", async () => ({ status: "ok" }));
 
 const PORT = process.env.PORT || 4000;
 app.listen({ port: PORT, host: "0.0.0.0" });
+
+import verifyJWT from "./middlewares/verifyJWT.js";
+
+app.get("/api/me", { preHandler: verifyJWT }, async (req) => {
+  return {
+    user: req.user,
+    message: "Protected route working ✅"
+  };
+});
