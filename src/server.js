@@ -2,19 +2,23 @@ import Fastify from "fastify";
 import loginRoute from "./routes/auth/login.js";
 import { verify } from "./jwt.js";
 
-const app = Fastify();
+const app = Fastify({ logger: true });
 
 app.register(loginRoute, { prefix: "/api/auth" });
 
-app.get("/api/me", async (req, reply) => {
+app.get("/api/me", async (request, reply) => {
   try {
-    const auth = req.headers.authorization;
+    const auth = request.headers.authorization;
+    if (!auth) {
+      return reply.code(401).send({ error: "Missing Authorization header" });
+    }
+
     const token = auth.replace("Bearer ", "");
     const decoded = verify(token);
 
     return {
       decoded,
-      message: "JWT VERIFIED INSIDE SERVER ✅"
+      message: "JWT VERIFIED ✅"
     };
   } catch (e) {
     return reply.code(401).send({
