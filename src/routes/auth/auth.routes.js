@@ -1,35 +1,35 @@
-import { registerUser, loginUser } from "../../services/auth.service.js";
+import bcrypt from "bcryptjs";
+import { createUser, findUserByEmail, safeUser } from "../../store/users.js";
+import { signToken } from "../../jwt.js";
 
 export default async function authRoutes(app) {
 
-  app.post("/register", async (request, reply) => {
-    try {
-      const { email, password } = request.body || {};
-      if (!email || !password) {
-        return reply.code(400).send({ error: "Email & password required" });
-      }
-
-      const user = await registerUser({ email, password });
-      return { registered: true, user };
-
-    } catch (e) {
-      return reply.code(400).send({ error: e.message });
+  app.post("/register", async (req, reply) => {
+    const { email, password } = req.body || {};
+    if (!email || !password) {
+      return reply.code(400).send({ error: "Email and password required" });
     }
+
+    if (findUserByEmail(email)) {
+      return reply.code(400).send({ error: "User already exists" });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    const user = createUser({ email, passwordHash });
+
+    return { registered: true, user: safeUser(user) };
   });
 
-  app.post("/login", async (request, reply) => {
-    try {
-      const { email, password } = request.body || {};
-      if (!email || !password) {
-        return reply.code(400).send({ error: "Email & password required" });
-      }
+  app.post("/login", async (req, reply) => {
+    const { email, password } = req.body || {};
+    const user = findUserByEmail(email);
 
-      const result = await loginUser({ email, password });
-      return { login: true, ...result };
-
-    } catch (e) {
-      return reply.code(401).send({ error: e.message });
+    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+      return reply.code(401).send({ error: "Invalid credentials" });
     }
-  });
 
+    const token = signToken({ id: user.id, email: user.email });
+
+    return { login: true, token };
+  });
 }
