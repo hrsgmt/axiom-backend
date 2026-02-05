@@ -33,3 +33,27 @@ app.register(meRoutes, { prefix: "/api" });
 app.listen({ port: PORT, host: "0.0.0.0" }, () => {
   console.log("Server running on", PORT);
 });
+
+// ===== PROTECTED PROFILE =====
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = "AXIOM_JWT_SINGLE_SECRET";
+
+app.get("/api/me", async (req, reply) => {
+  try {
+    const auth = req.headers.authorization;
+    if (!auth) {
+      return reply.code(401).send({ error: "No token" });
+    }
+
+    const token = auth.replace("Bearer ", "");
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    return {
+      user: decoded,
+      message: "PROFILE FETCH SUCCESS ✅"
+    };
+  } catch (e) {
+    return reply.code(401).send({ error: "Invalid or expired token" });
+  }
+});
