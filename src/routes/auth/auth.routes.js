@@ -1,28 +1,48 @@
 import bcrypt from "bcryptjs";
 import { signToken } from "../../utils/jwt.js";
 
-const users = [];
-
 export default async function authRoutes(app) {
 
-  app.post("/register", async (req) => {
-    const { email, password } = req.body;
+  // DEV RESET REGISTER (ALWAYS WORKS)
+  app.post("/register", async (req, reply) => {
+    const { email, password } = req.body || {};
+    if (!email || !password) {
+      return reply.code(400).send({ error: "Email & password required" });
+    }
+
     const passwordHash = await bcrypt.hash(password, 10);
 
-    users.push({ id: crypto.randomUUID(), email, passwordHash });
-    return { registered: true };
+    const user = {
+      id: crypto.randomUUID(),
+      email,
+      passwordHash,
+      createdAt: Date.now()
+    };
+
+    app.db.users.set(email, user);
+
+    return { registered: true, email };
   });
 
+  // LOGIN (MATCHES REGISTER ABOVE)
   app.post("/login", async (req, reply) => {
-    const { email, password } = req.body;
+    const { email, password } = req.body || {};
+    const user = app.db.users.get(email);
 
-    const user = users.find(u => u.email === email);
-    if (!user) return reply.code(401).send({ error: "Invalid credentials" });
+    if (!user) {
+      return reply.code(401).send({ error: "Invalid credentials" });
+    }
 
     const ok = await bcrypt.compare(password, user.passwordHash);
-    if (!ok) return reply.code(401).send({ error: "Invalid credentials" });
+    if (!ok) {
+      return reply.code(401).send({ error: "Invalid credentials" });
+    }
 
-    const token = signToken({ userId: user.id, email: user.email });
+    const token = signToken({
+      userId: user.id,
+      email: user.email
+    });
+
     return { login: true, token };
   });
 }
