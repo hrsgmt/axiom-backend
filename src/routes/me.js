@@ -1,6 +1,4 @@
-import jwt from "jsonwebtoken";
-
-const SECRET = "AXIOM_JWT_SINGLE_SECRET";
+import { verifyToken } from "../jwt.js";
 
 export default async function meRoute(app) {
   app.get("/api/me", async (request, reply) => {
@@ -11,7 +9,7 @@ export default async function meRoute(app) {
       }
 
       const token = auth.replace("Bearer ", "");
-      const decoded = jwt.verify(token, SECRET);
+      const decoded = verifyToken(token);
 
       return {
         decoded,
