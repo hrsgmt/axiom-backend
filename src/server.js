@@ -1,12 +1,39 @@
 import Fastify from "fastify";
-import authRoutes from "./routes/auth/auth.routes.js";
-import meRoute from "./routes/me.js";
+import cors from "@fastify/cors";
+import authRoutes from "./routes/auth/index.js";
+import { verify } from "./jwt.js";
 
 const app = Fastify({ logger: true });
 
-app.register(authRoutes, { prefix: "/api/auth" });
-app.register(meRoute, { prefix: "/api" });
+// ✅ CORS (browser access)
+await app.register(cors, {
+  origin: "*",
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+});
 
-app.get("/health", async () => ({ status: "ok" }));
+// Routes
+app.register(authRoutes, { prefix: "/api/auth" });
+
+// Protected route
+app.get("/api/me", async (request, reply) => {
+  try {
+    const auth = request.headers.authorization;
+    if (!auth) throw new Error("Missing Authorization header");
+
+    const token = auth.replace("Bearer ", "");
+    const decoded = verify(token);
+
+    return {
+      decoded,
+      message: "JWT VERIFIED ✅"
+    };
+  } catch (e) {
+    return reply.code(401).send({ error: "Invalid or expired token" });
+  }
+});
+
+// Health
+app.get("/", () => "Axiom backend running 🚀");
 
 app.listen({ port: process.env.PORT || 4000, host: "0.0.0.0" });
