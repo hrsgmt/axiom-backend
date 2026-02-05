@@ -5,30 +5,28 @@ import { verify } from "./jwt.js";
 
 const app = Fastify({ logger: true });
 
-// ✅ CORS (browser access)
+// ✅ ABSOLUTE CORS FIX (browser-safe)
 await app.register(cors, {
-  origin: "*",
+  origin: true, // allow all origins
+  credentials: true,
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 });
 
-// Routes
+// Auth routes
 app.register(authRoutes, { prefix: "/api/auth" });
 
 // Protected route
 app.get("/api/me", async (request, reply) => {
   try {
     const auth = request.headers.authorization;
-    if (!auth) throw new Error("Missing Authorization header");
+    if (!auth) throw new Error("No auth header");
 
     const token = auth.replace("Bearer ", "");
     const decoded = verify(token);
 
-    return {
-      decoded,
-      message: "JWT VERIFIED ✅"
-    };
-  } catch (e) {
+    return { user: decoded };
+  } catch {
     return reply.code(401).send({ error: "Invalid or expired token" });
   }
 });
