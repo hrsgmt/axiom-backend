@@ -1,28 +1,27 @@
 import Fastify from "fastify";
-import authRoutes from "./routes/auth/auth.routes.js";
-import verifyJWT from "./middlewares/verifyJWT.js";
+import loginRoute from "./routes/auth/login.js";
+import { verify } from "./jwt.js";
 
-const app = Fastify({ logger: true });
+const app = Fastify();
 
-app.register(authRoutes, { prefix: "/api/auth" });
+app.register(loginRoute, { prefix: "/api/auth" });
 
-app.get("/api/me", { preHandler: verifyJWT }, async (request) => {
-  return {
-    user: request.user,
-    message: "Protected route working ✅"
-  };
+app.get("/api/me", async (req, reply) => {
+  try {
+    const auth = req.headers.authorization;
+    const token = auth.replace("Bearer ", "");
+    const decoded = verify(token);
+
+    return {
+      decoded,
+      message: "JWT VERIFIED INSIDE SERVER ✅"
+    };
+  } catch (e) {
+    return reply.code(401).send({
+      error: "JWT VERIFY FAILED",
+      details: e.message
+    });
+  }
 });
 
-app.get("/health", async () => ({ status: "ok" }));
-
-const PORT = process.env.PORT || 4000;
-app.listen({ port: PORT, host: "0.0.0.0" });
-
-import verifyJWT from "./middlewares/verifyJWT.js";
-
-app.get("/api/me", { preHandler: verifyJWT }, async (req) => {
-  return {
-    user: req.user,
-    message: "Protected route working ✅"
-  };
-});
+app.listen({ port: process.env.PORT || 4000, host: "0.0.0.0" });
