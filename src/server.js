@@ -1,13 +1,24 @@
 import Fastify from "fastify";
+import cors from "@fastify/cors";
 
-const app = Fastify();
+// ROUTES
+import authRoutes from "./modules/auth/auth.routes.js";
 
-app.get("/", () => {
-  return "🚨 THIS IS src/server.js 🚨";
+const app = Fastify({ logger: true });
+
+// CORS
+await app.register(cors, {
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 });
 
-app.get("/health", () => {
-  return { ok: true };
+// AUTH ROUTES → /api/auth/*
+await app.register(authRoutes, { prefix: "/api/auth" });
+
+// HEALTH
+app.get("/", async () => {
+  return "Axiom backend running 🚀";
 });
 
 app.listen({ port: process.env.PORT || 4000, host: "0.0.0.0" });
