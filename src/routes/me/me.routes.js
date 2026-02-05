@@ -1,9 +1,9 @@
-import { verifyJwt } from "../../middleware/verifyJwt.js";
+import verifyJWT from "../../middlewares/verifyJWT.js";
 
 export default async function meRoutes(app) {
-  app.get("/me", { preHandler: verifyJwt }, async (req) => {
+  app.get("/me", { preHandler: verifyJWT }, async (request) => {
     return {
-      user: req.user,
+      user: request.user,
       message: "JWT VERIFIED ✅"
     };
   });

@@ -26,6 +26,10 @@ app.ready(() => {
 app.get("/", async () => "Axiom backend running 🚀");
 
 const PORT = process.env.PORT || 4000;
+import meRoutes from "./routes/me/me.routes.js";
+
+app.register(meRoutes, { prefix: "/api" });
+
 app.listen({ port: PORT, host: "0.0.0.0" }, () => {
   console.log("Server running on", PORT);
 });
