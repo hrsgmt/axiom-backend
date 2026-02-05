@@ -1,27 +1,29 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
-
-// ✅ AUTH ROUTES (ONLY ONE SOURCE)
 import authRoutes from "./routes/auth/auth.routes.js";
 
 const app = Fastify({ logger: true });
 
 // CORS
-await app.register(cors, {
-  origin: "*",
+app.register(cors, {
+  origin: true,
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 });
 
-// ✅ REGISTER AUTH ROUTES
-// This creates:
-// POST /api/auth/register
-// POST /api/auth/login
-await app.register(authRoutes, { prefix: "/api/auth" });
+// AUTH ROUTES
+app.register(authRoutes, { prefix: "/api/auth" });
 
-// HEALTH
-app.get("/", async () => {
-  return "Axiom backend running 🚀";
+// DEBUG: list routes
+app.ready(() => {
+  console.log("=== ROUTES ===");
+  console.log(app.printRoutes());
 });
 
-app.listen({ port: process.env.PORT || 4000, host: "0.0.0.0" });
+// HEALTH
+app.get("/", async () => "Axiom backend running 🚀");
+
+const PORT = process.env.PORT || 4000;
+app.listen({ port: PORT, host: "0.0.0.0" }, () => {
+  console.log("Server running on", PORT);
+});
