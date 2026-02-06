@@ -1,4 +1,5 @@
 import corsPlugin from "./plugins/cors.js";
+import corsPlugin from "./plugins/cors.js";
 
 import Fastify from "fastify";
 import jwt from "jsonwebtoken";
