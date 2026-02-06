@@ -1,45 +1,49 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import authRoutes from "./routes/auth/auth.routes.js";
-import jwt from "./jwt.js";
+import jwt from "jsonwebtoken";
 
 const app = Fastify({ logger: true });
 
+/* ✅ CORS MUST BE FIRST */
 await app.register(cors, {
-  origin: true,
-  credentials: true
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 });
 
-/* 🔥 HARD FORCE OPTIONS */
-app.options("*", async (req, reply) => {
-  reply
-    .header("Access-Control-Allow-Origin", "*")
-    .header("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
-    .header("Access-Control-Allow-Headers", "Content-Type, Authorization")
-    .code(204)
-    .send();
-});
+/* JWT VERIFY */
+const SECRET = "AXIOM_JWT_SINGLE_SECRET";
 
-/* CORS HEADERS FOR ALL */
-app.addHook("onSend", async (req, reply, payload) => {
-  reply.header("Access-Control-Allow-Origin", "*");
-  reply.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  reply.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-  return payload;
-});
-
-app.register(authRoutes, { prefix: "/api/auth" });
-
-app.get("/api/me", async (req, reply) => {
+app.decorate("verifyJWT", async (req, reply) => {
   try {
-    const token = req.headers.authorization?.replace("Bearer ", "");
-    const decoded = jwt.verify(token);
-    return { decoded, message: "JWT VERIFIED ✅" };
-  } catch {
-    return reply.code(401).send({ error: "Invalid token" });
+    const auth = req.headers.authorization;
+    if (!auth) throw new Error("Missing token");
+
+    const token = auth.replace("Bearer ", "");
+    req.user = jwt.verify(token, SECRET);
+  } catch (e) {
+    reply.code(401).send({ error: "Invalid or expired token" });
   }
 });
 
-app.get("/", async () => ({ status: "OK" }));
+/* ROUTES */
+await app.register(authRoutes, { prefix: "/api/auth" });
 
-app.listen({ port: 4000, host: "0.0.0.0" });
+app.get("/api/me", {
+  preHandler: app.verifyJWT
+}, async (req) => {
+  return {
+    decoded: req.user,
+    message: "JWT VERIFIED ✅"
+  };
+});
+
+/* HEALTH */
+app.get("/", async () => "Axiom backend running 🚀");
+
+/* START */
+app.listen({
+  port: process.env.PORT || 4000,
+  host: "0.0.0.0"
+});
