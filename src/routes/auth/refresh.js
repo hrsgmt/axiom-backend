@@ -1,27 +1,25 @@
-import jwt from "jsonwebtoken";
+import { signToken, verifyToken } from "../../jwt.js";
 
 export default async function refreshRoute(app) {
   app.post("/refresh", async (req, reply) => {
-    const token = req.cookies?.refreshToken;
-
-    if (!token) {
-      return reply.code(401).send({ error: "No refresh token" });
-    }
-
     try {
-      const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET || "dev-secret"
-      );
+      const token =
+        req.cookies?.refreshToken ||
+        req.headers.authorization?.replace("Bearer ", "");
 
-      const accessToken = jwt.sign(
-        { id: decoded.id, email: decoded.email },
-        process.env.JWT_SECRET || "dev-secret",
-        { expiresIn: "15m" }
-      );
+      if (!token) {
+        return reply.code(401).send({ error: "No refresh token" });
+      }
 
-      return { accessToken };
-    } catch (err) {
+      const decoded = verifyToken(token);
+
+      const newToken = signToken({
+        id: decoded.id,
+        email: decoded.email
+      });
+
+      return { token: newToken };
+    } catch (e) {
       return reply.code(401).send({ error: "Invalid refresh token" });
     }
   });
