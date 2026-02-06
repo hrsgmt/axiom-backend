@@ -9,7 +9,10 @@ export default async function refreshRoute(app) {
     }
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || "dev-secret");
+      const decoded = jwt.verify(
+        token,
+        process.env.JWT_SECRET || "dev-secret"
+      );
 
       const accessToken = jwt.sign(
         { id: decoded.id, email: decoded.email },
@@ -18,7 +21,7 @@ export default async function refreshRoute(app) {
       );
 
       return { accessToken };
-    } catch {
+    } catch (err) {
       return reply.code(401).send({ error: "Invalid refresh token" });
     }
   });
