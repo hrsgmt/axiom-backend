@@ -14,9 +14,14 @@ await app.register(cors, {
 
 await app.register(cookie);
 
+// ROUTES
 await loginRoute(app);
 await refreshRoute(app);
 
-app.get("/", () => "Axiom backend running 🚀");
+// HEALTH
+app.get("/", async () => "Axiom backend running 🚀");
 
-app.listen({ port: process.env.PORT || 4000, host: "0.0.0.0" });
+app.listen({
+  port: process.env.PORT || 4000,
+  host: "0.0.0.0"
+});
