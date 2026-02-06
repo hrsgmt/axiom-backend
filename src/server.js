@@ -2,10 +2,11 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import cookie from "@fastify/cookie";
 
-import loginRoute from "./routes/auth/login.js";
+import authRoutes from "./routes/auth/auth.routes.js";
 import refreshRoute from "./routes/auth/refresh.js";
+import meRoute from "./routes/me.js";
 
-const app = Fastify();
+const app = Fastify({ logger: true });
 
 await app.register(cors, {
   origin: true,
@@ -14,14 +15,16 @@ await app.register(cors, {
 
 await app.register(cookie);
 
-// ROUTES
-await loginRoute(app);
-await refreshRoute(app);
+/* AUTH */
+await app.register(authRoutes, { prefix: "/api/auth" });
+await app.register(refreshRoute, { prefix: "/api/auth" });
 
-// HEALTH
-app.get("/", async () => "Axiom backend running 🚀");
+/* ME */
+await app.register(meRoute, { prefix: "/api" });
 
-app.listen({
+app.get("/", () => "Axiom backend running 🚀");
+
+await app.listen({
   port: process.env.PORT || 4000,
   host: "0.0.0.0"
 });
