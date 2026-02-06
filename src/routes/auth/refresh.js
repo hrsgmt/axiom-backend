@@ -1,7 +1,7 @@
 import { verifyRefresh, signAccess } from "../../jwt.js";
 
 export default async function refreshRoute(app) {
-  app.post("/api/auth/refresh", async (req, reply) => {
+  app.post("/auth/refresh", async (req, reply) => {
     const token = req.cookies.refreshToken;
 
     if (!token) {
