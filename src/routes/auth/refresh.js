@@ -1,17 +1,16 @@
 import { verifyRefresh, signAccess } from "../../jwt.js";
-import { getUserIdByRefresh } from "../../store/refreshTokens.js";
 
-export default async function refresh(app) {
-  app.post("/refresh", async (req, reply) => {
-    const { refreshToken } = req.body;
-    if (!refreshToken) return reply.code(401).send({ error: "No token" });
+export default async function refreshRoute(app) {
+  app.post("/api/auth/refresh", async (req, reply) => {
+    const token = req.cookies.refreshToken;
+    if (!token) return reply.code(401).send({ error: "No refresh token" });
 
-    const decoded = verifyRefresh(refreshToken);
-    const userId = getUserIdByRefresh(refreshToken);
-
-    if (!userId) return reply.code(401).send({ error: "Invalid refresh" });
-
-    const accessToken = signAccess({ id: userId });
-    return { accessToken };
+    try {
+      const payload = verifyRefresh(token);
+      const newAccess = signAccess({ id: payload.id });
+      return { accessToken: newAccess };
+    } catch {
+      return reply.code(401).send({ error: "Invalid refresh token" });
+    }
   });
 }
