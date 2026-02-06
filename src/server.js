@@ -75,3 +75,12 @@ app.get("/api/me", async (req, reply) => {
 app.get("/", () => "Axiom backend running 🚀");
 
 app.listen({ port: process.env.PORT || 4000, host: "0.0.0.0" });
+
+// --- FORCE OPTIONS HANDLER (BROWSER FIX) ---
+app.options("*", async (req, reply) => {
+  reply
+    .header("Access-Control-Allow-Origin", "*")
+    .header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
+    .header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+    .send();
+});
