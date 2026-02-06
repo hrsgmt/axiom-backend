@@ -1,11 +1,20 @@
 import jwt from "jsonwebtoken";
 
-export const JWT_SECRET = "AXIOM_JWT_SINGLE_SECRET";
+const ACCESS_SECRET = "AXIOM_ACCESS_SECRET";
+const REFRESH_SECRET = "AXIOM_REFRESH_SECRET";
 
-export function signToken(payload) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
+export function signAccess(payload) {
+  return jwt.sign(payload, ACCESS_SECRET, { expiresIn: "15m" });
 }
 
-export function verifyToken(token) {
-  return jwt.verify(token, JWT_SECRET);
+export function signRefresh(payload) {
+  return jwt.sign(payload, REFRESH_SECRET, { expiresIn: "7d" });
+}
+
+export function verifyAccess(token) {
+  return jwt.verify(token, ACCESS_SECRET);
+}
+
+export function verifyRefresh(token) {
+  return jwt.verify(token, REFRESH_SECRET);
 }
