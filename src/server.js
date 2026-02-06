@@ -28,3 +28,8 @@ await app.listen({
   port: process.env.PORT || 4000,
   host: "0.0.0.0"
 });
+
+app.post("/__refresh_test__", async () => {
+  return { ok: true };
+});
+
